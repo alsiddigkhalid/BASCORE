@@ -48,6 +48,19 @@ const translations = {
       services: 'Services',
       contact: 'Contact',
       getStarted: 'Get Started',
+      login: 'Login',
+    },
+    consultation: {
+      title: 'Book Your Free Consultation',
+      subtitle: 'Speak with one of BASCORE\'s experts today.',
+      name: 'Full Name',
+      phone: 'Contact Number',
+      email: 'Email Address',
+      company: 'Company Name',
+      inquiry: 'Your Inquiry',
+      send: 'Send Request',
+      success: 'Thank you! Your request has been sent. We will contact you soon.',
+      error: 'Something went wrong. Please try again later.'
     },
     hero: {
       badge: 'Telecom & ELV System Integration in UAE',
@@ -260,6 +273,19 @@ const translations = {
       services: 'خدماتنا',
       contact: 'اتصل بنا',
       getStarted: 'ابدأ الآن',
+      login: 'تسجيل الدخول',
+    },
+    consultation: {
+      title: 'احجز استشارتك المجانية',
+      subtitle: 'تحدث مع أحد خبراء باسكور اليوم.',
+      name: 'الاسم الكامل',
+      phone: 'رقم الاتصال',
+      email: 'البريد الإلكتروني',
+      company: 'اسم الشركة',
+      inquiry: 'استفسارك',
+      send: 'إرسال الطلب',
+      success: 'شكراً لك! تم إرسال طلبك. سنتواصل معك قريباً.',
+      error: 'حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.'
     },
     hero: {
       badge: 'تكامل أنظمة الاتصالات و ELV في الإمارات',
@@ -482,7 +508,144 @@ const Skeleton = ({ className, dark = false }: { className?: string, dark?: bool
   </div>
 );
 
-const Navbar = ({ lang, setLang, t, onAuth }: { lang: string, setLang: (l: string) => void, t: any, onAuth: () => void }) => {
+const ConsultationModal = ({ isOpen, onClose, t }: { isOpen: boolean, onClose: () => void, t: any }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    company: '',
+    inquiry: ''
+  });
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus('loading');
+    try {
+      const response = await fetch('/api/consultations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      if (response.ok) {
+        setStatus('success');
+        setTimeout(() => {
+          onClose();
+          setStatus('idle');
+          setFormData({ name: '', phone: '', email: '', company: '', inquiry: '' });
+        }, 3000);
+      } else {
+        setStatus('error');
+      }
+    } catch (e) {
+      setStatus('error');
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+      />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative bg-white rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden"
+      >
+        <div className="p-8 md:p-12">
+          <button onClick={onClose} className="absolute top-8 right-8 text-slate-400 hover:text-slate-600">
+            <X size={24} />
+          </button>
+          
+          <h2 className="text-3xl font-bold mb-2">{t.consultation.title}</h2>
+          <p className="text-slate-500 mb-8">{t.consultation.subtitle}</p>
+
+          {status === 'success' ? (
+            <div className="bg-emerald-50 text-emerald-600 p-6 rounded-2xl text-center font-medium">
+              {t.consultation.success}
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-slate-700">{t.consultation.name}</label>
+                  <input 
+                    required
+                    type="text"
+                    value={formData.name}
+                    onChange={e => setFormData({...formData, name: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-slate-700">{t.consultation.phone}</label>
+                  <input 
+                    required
+                    type="tel"
+                    value={formData.phone}
+                    onChange={e => setFormData({...formData, phone: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all"
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-slate-700">{t.consultation.email}</label>
+                  <input 
+                    required
+                    type="email"
+                    value={formData.email}
+                    onChange={e => setFormData({...formData, email: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-slate-700">{t.consultation.company}</label>
+                  <input 
+                    required
+                    type="text"
+                    value={formData.company}
+                    onChange={e => setFormData({...formData, company: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-slate-700">{t.consultation.inquiry}</label>
+                <textarea 
+                  required
+                  rows={4}
+                  value={formData.inquiry}
+                  onChange={e => setFormData({...formData, inquiry: e.target.value})}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all resize-none"
+                />
+              </div>
+              
+              {status === 'error' && (
+                <p className="text-red-500 text-sm font-medium">{t.consultation.error}</p>
+              )}
+
+              <button 
+                disabled={status === 'loading'}
+                className="w-full bg-brand text-white py-4 rounded-2xl font-bold hover:bg-brand-dark transition-all shadow-xl shadow-brand/20 disabled:opacity-50"
+              >
+                {status === 'loading' ? '...' : t.consultation.send}
+              </button>
+            </form>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+const Navbar = ({ lang, setLang, t, onAuth, onConsultation }: { lang: string, setLang: (l: string) => void, t: any, onAuth: () => void, onConsultation: () => void }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -521,6 +684,12 @@ const Navbar = ({ lang, setLang, t, onAuth }: { lang: string, setLang: (l: strin
           </button>
           <button 
             onClick={onAuth}
+            className="text-slate-600 px-4 py-2 rounded-full text-sm font-semibold hover:text-brand transition-all"
+          >
+            {t.nav.login}
+          </button>
+          <button 
+            onClick={onConsultation}
             className="bg-brand text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-brand-dark transition-all shadow-lg shadow-brand/20"
           >
             {t.nav.getStarted}
@@ -553,7 +722,13 @@ const Navbar = ({ lang, setLang, t, onAuth }: { lang: string, setLang: (l: strin
               <a href="/#contact" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">{t.nav.contact}</a>
               <hr className="border-slate-100" />
               <button 
-                onClick={onAuth}
+                onClick={() => { onAuth(); setIsMobileMenuOpen(false); }}
+                className="w-full text-slate-600 py-4 rounded-2xl font-bold border border-slate-100"
+              >
+                {t.nav.login}
+              </button>
+              <button 
+                onClick={() => { onConsultation(); setIsMobileMenuOpen(false); }}
                 className="w-full bg-brand text-white py-4 rounded-2xl font-bold"
               >
                 {t.nav.getStarted}
@@ -566,7 +741,7 @@ const Navbar = ({ lang, setLang, t, onAuth }: { lang: string, setLang: (l: strin
   );
 };
 
-const Hero = ({ t, onAuth }: { t: any, onAuth: () => void }) => {
+const Hero = ({ t, onConsultation }: { t: any, onConsultation: () => void }) => {
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 500], [0, 100]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
@@ -620,7 +795,7 @@ const Hero = ({ t, onAuth }: { t: any, onAuth: () => void }) => {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <button 
-              onClick={onAuth}
+              onClick={onConsultation}
               className="w-full sm:w-auto bg-brand text-white px-8 py-4 rounded-full text-lg font-bold hover:bg-brand-dark transition-all shadow-xl shadow-brand/20 flex items-center justify-center gap-2 group"
             >
               {t.hero.getStarted} <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform rtl:rotate-180" />
@@ -997,6 +1172,7 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [showConsultation, setShowConsultation] = useState(false);
 
   const t = translations[lang as keyof typeof translations];
 
@@ -1035,8 +1211,8 @@ export default function App() {
       <Routes>
       <Route path="/" element={
         <div className="min-h-screen">
-          <Navbar lang={lang} setLang={setLang} t={t} onAuth={() => setShowAuth(true)} />
-          <Hero t={t} onAuth={() => setShowAuth(true)} />
+          <Navbar lang={lang} setLang={setLang} t={t} onAuth={() => setShowAuth(true)} onConsultation={() => setShowConsultation(true)} />
+          <Hero t={t} onConsultation={() => setShowConsultation(true)} />
           <TrustBar t={t} />
           <WhyBascore t={t} />
           <AboutUs t={t} />
@@ -1058,7 +1234,7 @@ export default function App() {
                   </p>
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <button 
-                      onClick={() => setShowAuth(true)}
+                      onClick={() => setShowConsultation(true)}
                       className="w-full sm:w-auto bg-brand text-white px-10 py-5 rounded-full text-xl font-bold hover:bg-brand-dark transition-all shadow-2xl shadow-brand/40"
                     >
                       {t.cta.btn1}
@@ -1079,6 +1255,13 @@ export default function App() {
               <AuthModal 
                 onSuccess={handleAuthSuccess} 
                 onClose={() => setShowAuth(false)} 
+              />
+            )}
+            {showConsultation && (
+              <ConsultationModal 
+                isOpen={showConsultation} 
+                onClose={() => setShowConsultation(false)} 
+                t={t} 
               />
             )}
           </AnimatePresence>

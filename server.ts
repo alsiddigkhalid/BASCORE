@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import Database from 'better-sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import nodemailer from 'nodemailer';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const db = new Database('bascore.db');
@@ -48,6 +49,16 @@ db.exec(`
     FOREIGN KEY (ticketId) REFERENCES tickets(id),
     FOREIGN KEY (senderId) REFERENCES users(id)
   );
+
+  CREATE TABLE IF NOT EXISTS consultations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    email TEXT NOT NULL,
+    company TEXT NOT NULL,
+    inquiry TEXT NOT NULL,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 // Migration: Add missing columns if they don't exist
@@ -62,6 +73,13 @@ if (!tableInfo.some((col: any) => col.name === 'updatedAt')) {
 const msgTableInfo = db.prepare("PRAGMA table_info(messages)").all();
 if (!msgTableInfo.some((col: any) => col.name === 'isPrivate')) {
   try { db.exec("ALTER TABLE messages ADD COLUMN isPrivate INTEGER DEFAULT 0"); } catch (e) {}
+}
+
+// Seed Admin User
+const adminExists = db.prepare('SELECT * FROM users WHERE email = ?').get('admin@bascore.ae');
+if (!adminExists) {
+  const hashedPassword = bcrypt.hashSync('admin123', 10);
+  db.prepare('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)').run('Admin', 'admin@bascore.ae', hashedPassword, 'admin');
 }
 
 const app = express();
@@ -112,6 +130,60 @@ const authorize = (roles: string[]) => (req: any, res: any, next: any) => {
   }
   next();
 };
+
+// Consultations
+app.post('/api/consultations', async (req, res) => {
+  const { name, phone, email, company, inquiry } = req.body;
+  if (!name || !phone || !email || !company || !inquiry) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  try {
+    const stmt = db.prepare('INSERT INTO consultations (name, phone, email, company, inquiry) VALUES (?, ?, ?, ?, ?)');
+    stmt.run(name, phone, email, company, inquiry);
+
+    // Optional: Send Email if SMTP is configured
+    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: process.env.SMTP_PORT === '465',
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: `"BASCORE Website" <${process.env.SMTP_USER}>`,
+        to: process.env.CONTACT_EMAIL || process.env.SMTP_USER,
+        subject: `New Consultation Request from ${name}`,
+        text: `
+          Name: ${name}
+          Phone: ${phone}
+          Email: ${email}
+          Company: ${company}
+          Inquiry: ${inquiry}
+        `,
+        html: `
+          <h3>New Consultation Request</h3>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Phone:</strong> ${phone}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Company:</strong> ${company}</p>
+          <p><strong>Inquiry:</strong> ${inquiry}</p>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Consultation error:', error);
+    res.status(500).json({ error: 'Failed to save consultation' });
+  }
+});
 
 // API Routes
 app.post('/api/auth/register', authenticate, authorize(['admin']), async (req, res) => {
