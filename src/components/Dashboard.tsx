@@ -61,9 +61,10 @@ interface DashboardProps {
   user: any;
   token: string;
   onLogout: () => void;
+  t: any;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout, t }) => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -198,9 +199,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
   };
 
   const stats = [
-    { label: 'Total Tickets', value: tickets.length, icon: Ticket, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Pending', value: tickets.filter(t => t.status === 'open' || t.status === 'pending').length, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Resolved', value: tickets.filter(t => t.status === 'resolved').length, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: t.dashboard.totalTickets, value: tickets.length, icon: Ticket, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: t.dashboard.pending, value: tickets.filter(t => t.status === 'open' || t.status === 'pending').length, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: t.dashboard.resolved, value: tickets.filter(t => t.status === 'resolved').length, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 
   const filteredTickets = tickets
@@ -292,14 +293,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                   onClick={() => { setActiveTab('tickets'); setIsMobileMenuOpen(false); }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'tickets' ? 'bg-[#f1c232]/10 text-[#f1c232]' : 'text-gray-600 hover:bg-gray-50'}`}
                 >
-                  <Activity className="w-5 h-5" /> Dashboard
+                  <Activity className="w-5 h-5" /> {t.dashboard.dashboard}
                 </button>
                 {isAdminOrStaff && (
                   <button 
                     onClick={() => { setActiveTab('chat'); setIsMobileMenuOpen(false); }}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'chat' ? 'bg-[#f1c232]/10 text-[#f1c232]' : 'text-gray-600 hover:bg-gray-50'}`}
                   >
-                    <MessageSquare className="w-5 h-5" /> Internal Chat
+                    <MessageSquare className="w-5 h-5" /> {t.dashboard.internalChat}
                   </button>
                 )}
                 {user.role === 'admin' && (
@@ -307,11 +308,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                     onClick={() => { setActiveTab('users'); setIsMobileMenuOpen(false); }}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'users' ? 'bg-[#f1c232]/10 text-[#f1c232]' : 'text-gray-600 hover:bg-gray-50'}`}
                   >
-                    <Users className="w-5 h-5" /> Team Members
+                    <Users className="w-5 h-5" /> {t.dashboard.teamMembers}
                   </button>
                 )}
                 <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">
-                  <Shield className="w-5 h-5" /> Security
+                  <Shield className="w-5 h-5" /> {t.dashboard.security}
                 </button>
               </nav>
 
@@ -320,7 +321,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                   onClick={onLogout}
                   className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors"
                 >
-                  <LogOut className="w-5 h-5" /> Logout
+                  <LogOut className="w-5 h-5" /> {t.dashboard.logout}
                 </button>
               </div>
             </motion.aside>
@@ -342,14 +343,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
             onClick={() => setActiveTab('tickets')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'tickets' ? 'bg-[#f1c232]/10 text-[#f1c232]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Activity className="w-5 h-5" /> Dashboard
+            <Activity className="w-5 h-5" /> {t.dashboard.dashboard}
           </button>
           {isAdminOrStaff && (
             <button 
               onClick={() => setActiveTab('chat')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'chat' ? 'bg-[#f1c232]/10 text-[#f1c232]' : 'text-gray-600 hover:bg-gray-50'}`}
             >
-              <MessageSquare className="w-5 h-5" /> Internal Chat
+              <MessageSquare className="w-5 h-5" /> {t.dashboard.internalChat}
             </button>
           )}
           {user.role === 'admin' && (
@@ -357,11 +358,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
               onClick={() => setActiveTab('users')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'users' ? 'bg-[#f1c232]/10 text-[#f1c232]' : 'text-gray-600 hover:bg-gray-50'}`}
             >
-              <Users className="w-5 h-5" /> Team Members
+              <Users className="w-5 h-5" /> {t.dashboard.teamMembers}
             </button>
           )}
           <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">
-            <Shield className="w-5 h-5" /> Security
+            <Shield className="w-5 h-5" /> {t.dashboard.security}
           </button>
         </nav>
 
@@ -370,7 +371,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
             onClick={onLogout}
             className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors"
           >
-            <LogOut className="w-5 h-5" /> Logout
+            <LogOut className="w-5 h-5" /> {t.dashboard.logout}
           </button>
         </div>
       </aside>
@@ -387,7 +388,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
               <Menu className="w-6 h-6" />
             </button>
             <h1 className="text-xl font-bold text-gray-900">
-              {isAdminOrStaff ? 'Staff Management Portal' : 'Customer Support Portal'}
+              {isAdminOrStaff ? t.dashboard.staffPortal : t.dashboard.customerPortal}
             </h1>
           </div>
           <div className="flex items-center gap-4">
@@ -439,10 +440,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                     <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <h2 className="text-lg font-bold text-gray-900">
-                          {isAdminOrStaff ? 'All Support Tickets' : 'Your Support Tickets'}
+                          {isAdminOrStaff ? t.dashboard.allTickets : t.dashboard.yourTickets}
                         </h2>
                         <p className="text-sm text-gray-500">
-                          {isAdminOrStaff ? 'Manage and update customer requests' : 'Track and manage your active requests'}
+                          {isAdminOrStaff ? t.dashboard.manageRequests : t.dashboard.trackRequests}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
@@ -458,7 +459,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                             onClick={() => setShowNewTicket(true)}
                             className="bg-[#f1c232] text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#d9af2d] transition-all shadow-sm"
                           >
-                            <Plus className="w-5 h-5" /> New Ticket
+                            <Plus className="w-5 h-5" /> {t.dashboard.newTicket}
                           </button>
                         )}
                       </div>
@@ -469,7 +470,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input 
                         type="text"
-                        placeholder="Search tickets by ID, title, or customer..."
+                        placeholder={t.dashboard.searchPlaceholder}
                         className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#f1c232] text-sm"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -481,31 +482,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                         value={filters.status}
                         onChange={(e) => setFilters({...filters, status: e.target.value})}
                       >
-                        <option value="all">All Statuses</option>
-                        <option value="open">Open</option>
-                        <option value="pending">Pending</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="closed">Closed</option>
+                        <option value="all">{t.dashboard.allStatuses}</option>
+                        <option value="open">{t.dashboard.open}</option>
+                        <option value="pending">{t.dashboard.pending}</option>
+                        <option value="resolved">{t.dashboard.resolvedStatus}</option>
+                        <option value="closed">{t.dashboard.closed}</option>
                       </select>
                       <select 
                         className="text-xs bg-white border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#f1c232]"
                         value={filters.priority}
                         onChange={(e) => setFilters({...filters, priority: e.target.value})}
                       >
-                        <option value="all">All Priorities</option>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
+                        <option value="all">{t.dashboard.allPriorities}</option>
+                        <option value="low">{t.dashboard.low}</option>
+                        <option value="medium">{t.dashboard.medium}</option>
+                        <option value="high">{t.dashboard.high}</option>
+                        <option value="urgent">{t.dashboard.urgent}</option>
                       </select>
                       <select 
                         className="text-xs bg-white border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#f1c232]"
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as any)}
                       >
-                        <option value="updated">Last Updated</option>
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
+                        <option value="updated">{t.dashboard.lastUpdated}</option>
+                        <option value="newest">{t.dashboard.newestFirst}</option>
+                        <option value="oldest">{t.dashboard.oldestFirst}</option>
                       </select>
                       {(filters.status !== 'all' || filters.priority !== 'all' || searchQuery) && (
                         <button 
@@ -515,7 +516,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                           }}
                           className="text-xs text-gray-500 hover:text-[#f1c232] font-medium"
                         >
-                          Reset Filters
+                          {t.dashboard.resetFilters}
                         </button>
                       )}
                     </div>
@@ -525,11 +526,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                     <table className="w-full text-left border-collapse">
                       <thead className="bg-gray-50 text-gray-500 text-[11px] uppercase tracking-wider border-b border-gray-200">
                         <tr>
-                          <th className="px-6 py-3 font-bold">Ticket</th>
-                          <th className="px-6 py-3 font-bold">Status</th>
-                          <th className="px-6 py-3 font-bold">Priority</th>
-                          <th className="px-6 py-3 font-bold">Agent</th>
-                          <th className="px-6 py-3 font-bold">Last Updated</th>
+                          <th className="px-6 py-3 font-bold">{t.dashboard.ticket}</th>
+                          <th className="px-6 py-3 font-bold">{t.dashboard.status}</th>
+                          <th className="px-6 py-3 font-bold">{t.dashboard.priority}</th>
+                          <th className="px-6 py-3 font-bold">{t.dashboard.agent}</th>
+                          <th className="px-6 py-3 font-bold">{t.dashboard.lastUpdated}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
@@ -537,7 +538,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                           <tr>
                             <td colSpan={5} className="px-6 py-12 text-center">
                               <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#f1c232]" />
-                              <p className="text-gray-500 mt-2">Loading tickets...</p>
+                              <p className="text-gray-500 mt-2">{t.dashboard.loadingTickets}</p>
                             </td>
                           </tr>
                         ) : filteredTickets.length === 0 ? (
@@ -546,8 +547,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                               <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Ticket className="w-8 h-8 text-gray-300" />
                               </div>
-                              <p className="text-gray-900 font-bold">No tickets found</p>
-                              <p className="text-gray-500 text-sm">Try adjusting your search or filters</p>
+                              <p className="text-gray-900 font-bold">{t.dashboard.noTicketsFound}</p>
+                              <p className="text-gray-500 text-sm">{t.dashboard.tryAdjusting}</p>
                             </td>
                           </tr>
                         ) : (
@@ -585,7 +586,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                                   <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-600 border border-gray-200">
                                     {ticket.agentName ? ticket.agentName[0] : '?'}
                                   </div>
-                                  <span className="text-xs text-gray-600">{ticket.agentName || 'Unassigned'}</span>
+                                  <span className="text-xs text-gray-600">{ticket.agentName || t.dashboard.unassigned}</span>
                                 </div>
                               </td>
                               <td className="px-6 py-4 text-xs text-gray-500">
@@ -604,17 +605,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
               <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-160px)]">
                 {/* Main Conversation Area */}
                 <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-                  {!selectedTicketId ? (
-                    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-                      <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mb-4">
-                        <MessageSquare className="w-10 h-10 text-gray-300" />
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-900">No Ticket Selected</h3>
-                      <p className="text-gray-500 max-w-xs mx-auto mt-2">
-                        Please select a ticket from the dashboard to view the conversation.
-                      </p>
-                    </div>
-                  ) : (
+                      {!selectedTicketId ? (
+                        <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+                          <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mb-4">
+                            <MessageSquare className="w-10 h-10 text-gray-300" />
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900">{t.dashboard.noTicketSelected}</h3>
+                          <p className="text-gray-500 max-w-xs mx-auto mt-2">
+                            {t.dashboard.selectTicket}
+                          </p>
+                        </div>
+                      ) : (
                     <>
                       {/* Ticket Header */}
                       <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
@@ -707,14 +708,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                             onClick={() => setIsPrivateNote(false)}
                             className={`text-sm font-bold pb-2 border-b-2 transition-colors ${!isPrivateNote ? 'border-[#f1c232] text-[#f1c232]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
                           >
-                            Reply
+                            {t.dashboard.reply}
                           </button>
                           {isAdminOrStaff && (
                             <button 
                               onClick={() => setIsPrivateNote(true)}
                               className={`text-sm font-bold pb-2 border-b-2 transition-colors ${isPrivateNote ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
                             >
-                              Add Note
+                              {t.dashboard.addNote}
                             </button>
                           )}
                         </div>
@@ -722,7 +723,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                           <textarea
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder={isPrivateNote ? "Type a private note (only visible to agents)..." : "Type your response here..."}
+                            placeholder={isPrivateNote ? t.dashboard.typePrivate : t.dashboard.typeResponse}
                             className={`w-full p-4 rounded-xl border outline-none focus:ring-2 transition-all resize-none ${
                               isPrivateNote 
                                 ? 'bg-amber-50 border-amber-200 focus:ring-amber-500' 
@@ -740,7 +741,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                                   : 'bg-[#f1c232] text-black hover:bg-[#d9af2d]'
                               }`}
                             >
-                              {isPrivateNote ? 'Add Private Note' : 'Send Reply'}
+                              {isPrivateNote ? t.dashboard.addPrivateNote : t.dashboard.sendReply}
                             </button>
                           </div>
                         </form>
@@ -754,20 +755,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                   <div className="w-full lg:w-80 space-y-6 overflow-y-auto">
                     {/* Ticket Properties */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Ticket Properties</h3>
+                      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">{t.dashboard.properties}</h3>
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Status</label>
+                          <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">{t.dashboard.status}</label>
                           {isAdminOrStaff ? (
                             <select 
                               className="w-full text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#f1c232]"
                               value={tickets.find(t => t.id === selectedTicketId)?.status}
                               onChange={(e) => handleUpdateTicket(selectedTicketId, { status: e.target.value as any })}
                             >
-                              <option value="open">Open</option>
-                              <option value="pending">Pending</option>
-                              <option value="resolved">Resolved</option>
-                              <option value="closed">Closed</option>
+                              <option value="open">{t.dashboard.open}</option>
+                              <option value="pending">{t.dashboard.pending}</option>
+                              <option value="resolved">{t.dashboard.resolvedStatus}</option>
+                              <option value="closed">{t.dashboard.closed}</option>
                             </select>
                           ) : (
                             <span className={`text-xs font-bold uppercase px-2 py-1 rounded-full border inline-block ${getStatusColor(tickets.find(t => t.id === selectedTicketId)?.status || '')}`}>
@@ -776,17 +777,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                           )}
                         </div>
                         <div>
-                          <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Priority</label>
+                          <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">{t.dashboard.priority}</label>
                           {isAdminOrStaff ? (
                             <select 
                               className="w-full text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#f1c232]"
                               value={tickets.find(t => t.id === selectedTicketId)?.priority}
                               onChange={(e) => handleUpdateTicket(selectedTicketId, { priority: e.target.value as any })}
                             >
-                              <option value="low">Low</option>
-                              <option value="medium">Medium</option>
-                              <option value="high">High</option>
-                              <option value="urgent">Urgent</option>
+                              <option value="low">{t.dashboard.low}</option>
+                              <option value="medium">{t.dashboard.medium}</option>
+                              <option value="high">{t.dashboard.high}</option>
+                              <option value="urgent">{t.dashboard.urgent}</option>
                             </select>
                           ) : (
                             <span className={`text-xs font-bold uppercase px-2 py-1 rounded border inline-block ${getPriorityColor(tickets.find(t => t.id === selectedTicketId)?.priority || '')}`}>
@@ -795,31 +796,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                           )}
                         </div>
                         <div>
-                          <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Type</label>
+                          <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">{t.dashboard.type}</label>
                           {isAdminOrStaff ? (
                             <select 
                               className="w-full text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#f1c232]"
                               value={tickets.find(t => t.id === selectedTicketId)?.type}
                               onChange={(e) => handleUpdateTicket(selectedTicketId, { type: e.target.value as any })}
                             >
-                              <option value="Question">Question</option>
-                              <option value="Incident">Incident</option>
-                              <option value="Problem">Problem</option>
-                              <option value="Feature Request">Feature Request</option>
+                              <option value="Question">{t.dashboard.question}</option>
+                              <option value="Incident">{t.dashboard.incident}</option>
+                              <option value="Problem">{t.dashboard.problem}</option>
+                              <option value="Feature Request">{t.dashboard.featureRequest}</option>
                             </select>
                           ) : (
                             <span className="text-sm text-gray-700 font-medium">{tickets.find(t => t.id === selectedTicketId)?.type}</span>
                           )}
                         </div>
                         <div>
-                          <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Agent</label>
+                          <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">{t.dashboard.agent}</label>
                           {user.role === 'admin' ? (
                             <select 
                               className="w-full text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#f1c232]"
                               value={tickets.find(t => t.id === selectedTicketId)?.assignedTo || ''}
                               onChange={(e) => handleUpdateTicket(selectedTicketId, { assignedTo: e.target.value ? parseInt(e.target.value) : null })}
                             >
-                              <option value="">Unassigned</option>
+                              <option value="">{t.dashboard.unassigned}</option>
                               {users.filter(u => u.role === 'staff' || u.role === 'admin').map(agent => (
                                 <option key={agent.id} value={agent.id}>{agent.name}</option>
                               ))}
@@ -829,7 +830,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                               <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-600 border border-gray-200">
                                 {tickets.find(t => t.id === selectedTicketId)?.agentName?.[0] || '?'}
                               </div>
-                              <span className="text-sm text-gray-700 font-medium">{tickets.find(t => t.id === selectedTicketId)?.agentName || 'Unassigned'}</span>
+                              <span className="text-sm text-gray-700 font-medium">{tickets.find(t => t.id === selectedTicketId)?.agentName || t.dashboard.unassigned}</span>
                             </div>
                           )}
                         </div>
@@ -838,14 +839,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
 
                     {/* Contact Details */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Contact Details</h3>
+                      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">{t.dashboard.contactDetails}</h3>
                       <div className="flex items-center gap-4 mb-4">
                         <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-600 text-xl">
                           {tickets.find(t => t.id === selectedTicketId)?.userName?.[0]}
                         </div>
                         <div>
                           <p className="text-sm font-bold text-gray-900">{tickets.find(t => t.id === selectedTicketId)?.userName}</p>
-                          <p className="text-xs text-gray-500">Customer</p>
+                          <p className="text-xs text-gray-500">{t.dashboard.customer}</p>
                         </div>
                       </div>
                       <div className="space-y-3">
@@ -855,7 +856,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                         </div>
                         <div className="flex items-center gap-2 text-gray-600">
                           <Activity className="w-4 h-4" />
-                          <span className="text-xs">Joined {formatTime(new Date().toISOString())}</span>
+                          <span className="text-xs">{t.dashboard.joined} {formatTime(new Date().toISOString())}</span>
                         </div>
                       </div>
                     </div>
@@ -867,14 +868,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                   <div>
-                    <h2 className="text-lg font-bold text-gray-900">User Management</h2>
-                    <p className="text-sm text-gray-500">Create and manage staff and customer accounts</p>
+                    <h2 className="text-lg font-bold text-gray-900">{t.dashboard.userManagement}</h2>
+                    <p className="text-sm text-gray-500">{t.dashboard.createManageAccounts}</p>
                   </div>
                   <button 
                     onClick={() => setShowNewUser(true)}
                     className="bg-[#f1c232] text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#d9af2d] transition-all"
                   >
-                    <Plus className="w-5 h-5" /> Add User
+                    <Plus className="w-5 h-5" /> {t.dashboard.addUser}
                   </button>
                 </div>
 
@@ -882,10 +883,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                   <table className="w-full text-left">
                     <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
                       <tr>
-                        <th className="px-6 py-4 font-semibold">Name</th>
-                        <th className="px-6 py-4 font-semibold">Email</th>
-                        <th className="px-6 py-4 font-semibold">Role</th>
-                        <th className="px-6 py-4 font-semibold text-right">Action</th>
+                        <th className="px-6 py-4 font-semibold">{t.dashboard.name}</th>
+                        <th className="px-6 py-4 font-semibold">{t.dashboard.email}</th>
+                        <th className="px-6 py-4 font-semibold">{t.dashboard.role}</th>
+                        <th className="px-6 py-4 font-semibold text-right">{t.dashboard.action}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -915,8 +916,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
             ) : (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
                 <Shield className="w-16 h-16 mx-auto text-gray-200 mb-4" />
-                <h3 className="text-xl font-bold text-gray-900">Access Restricted</h3>
-                <p className="text-gray-500">This section is only available for authorized BASCORE personnel.</p>
+                <h3 className="text-xl font-bold text-gray-900">{t.dashboard.accessRestricted}</h3>
+                <p className="text-gray-500">{t.dashboard.authorizedPersonnel}</p>
               </div>
             )}
           </div>
@@ -934,7 +935,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
               className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900">Open New Support Ticket</h3>
+                <h3 className="text-xl font-bold text-gray-900">{t.dashboard.openNewTicket}</h3>
                 <button onClick={() => setShowNewTicket(false)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-6 h-6" />
                 </button>
@@ -942,11 +943,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
               
               <form onSubmit={handleCreateTicket} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Issue Title</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">{t.dashboard.issueTitle}</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g., Network connectivity issue in Office A"
+                    placeholder={t.dashboard.issueTitlePlaceholder}
                     className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#f1c232] outline-none"
                     value={newTicket.title}
                     onChange={(e) => setNewTicket({ ...newTicket, title: e.target.value })}
@@ -955,59 +956,59 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Category</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">{t.dashboard.category}</label>
                     <select
                       className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#f1c232] outline-none"
                       value={newTicket.category}
                       onChange={(e) => setNewTicket({ ...newTicket, category: e.target.value })}
                     >
-                      <option>Network</option>
-                      <option>Fiber Optic</option>
-                      <option>ELV Systems</option>
-                      <option>Wireless</option>
-                      <option>Cabling</option>
-                      <option>Other</option>
+                      <option>{t.dashboard.catNetwork}</option>
+                      <option>{t.dashboard.catFiber}</option>
+                      <option>{t.dashboard.catELV}</option>
+                      <option>{t.dashboard.catWireless}</option>
+                      <option>{t.dashboard.catCabling}</option>
+                      <option>{t.dashboard.catOther}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Type</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">{t.dashboard.type}</label>
                     <select
                       className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#f1c232] outline-none"
                       value={newTicket.type}
                       onChange={(e) => setNewTicket({ ...newTicket, type: e.target.value as any })}
                     >
-                      <option>Question</option>
-                      <option>Incident</option>
-                      <option>Problem</option>
-                      <option>Feature Request</option>
+                      <option value="Question">{t.dashboard.question}</option>
+                      <option value="Incident">{t.dashboard.incident}</option>
+                      <option value="Problem">{t.dashboard.problem}</option>
+                      <option value="Feature Request">{t.dashboard.featureRequest}</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Priority</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">{t.dashboard.priority}</label>
                     <select
                       className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#f1c232] outline-none"
                       value={newTicket.priority}
                       onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value as any })}
                     >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="urgent">Urgent</option>
+                      <option value="low">{t.dashboard.low}</option>
+                      <option value="medium">{t.dashboard.medium}</option>
+                      <option value="high">{t.dashboard.high}</option>
+                      <option value="urgent">{t.dashboard.urgent}</option>
                     </select>
                   </div>
 
                 {user.role === 'admin' && (
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Assign Agent (Optional)</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">{t.dashboard.assignAgent}</label>
                     <select
                       className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#f1c232] outline-none"
                       value={newTicket.assignedTo}
                       onChange={(e) => setNewTicket({ ...newTicket, assignedTo: e.target.value })}
                     >
-                      <option value="">Auto-assign random agent</option>
+                      <option value="">{t.dashboard.autoAssign}</option>
                       {users.filter(u => u.role === 'staff' || u.role === 'admin').map(agent => (
                         <option key={agent.id} value={agent.id}>{agent.name} ({agent.role})</option>
                       ))}
@@ -1017,11 +1018,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Description</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">{t.dashboard.description}</label>
                   <textarea
                     required
                     rows={4}
-                    placeholder="Please describe the issue in detail..."
+                    placeholder={t.dashboard.descriptionPlaceholder}
                     className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#f1c232] outline-none resize-none"
                     value={newTicket.description}
                     onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
@@ -1033,7 +1034,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                   disabled={submitting}
                   className="w-full bg-[#f1c232] text-black font-bold py-3 rounded-xl hover:bg-[#d9af2d] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
                 >
-                  {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Submit Ticket'}
+                  {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : t.dashboard.submitTicket}
                 </button>
               </form>
             </motion.div>
@@ -1051,7 +1052,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
               className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900">Create New User</h3>
+                <h3 className="text-xl font-bold text-gray-900">{t.dashboard.createNewUser}</h3>
                 <button onClick={() => setShowNewUser(false)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-6 h-6" />
                 </button>
@@ -1059,7 +1060,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
               
               <form onSubmit={handleCreateUser} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">{t.dashboard.fullName}</label>
                   <input
                     type="text"
                     required
@@ -1069,7 +1070,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Email Address</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">{t.dashboard.emailAddress}</label>
                   <input
                     type="email"
                     required
@@ -1079,7 +1080,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Password</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">{t.dashboard.password}</label>
                   <input
                     type="password"
                     required
@@ -1089,15 +1090,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Role</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">{t.dashboard.role}</label>
                   <select
                     className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#f1c232] outline-none"
                     value={newUser.role}
                     onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
                   >
-                    <option value="customer">Customer</option>
-                    <option value="staff">Staff</option>
-                    <option value="admin">Admin</option>
+                    <option value="customer">{t.dashboard.roleCustomer}</option>
+                    <option value="staff">{t.dashboard.roleStaff}</option>
+                    <option value="admin">{t.dashboard.roleAdmin}</option>
                   </select>
                 </div>
 
@@ -1106,7 +1107,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                   disabled={submitting}
                   className="w-full bg-[#f1c232] text-black font-bold py-3 rounded-xl hover:bg-[#d9af2d] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
                 >
-                  {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create User'}
+                  {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : t.dashboard.createUser}
                 </button>
               </form>
             </motion.div>
