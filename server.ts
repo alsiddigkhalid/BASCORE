@@ -25,20 +25,24 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS tickets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     userId INTEGER NOT NULL,
+    assignedTo INTEGER,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     status TEXT DEFAULT 'open',
     priority TEXT DEFAULT 'medium',
     category TEXT NOT NULL,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (userId) REFERENCES users(id)
+    FOREIGN KEY (userId) REFERENCES users(id),
+    FOREIGN KEY (assignedTo) REFERENCES users(id)
   );
 
   CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticketId INTEGER NOT NULL,
     senderId INTEGER NOT NULL,
     text TEXT NOT NULL,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ticketId) REFERENCES tickets(id),
     FOREIGN KEY (senderId) REFERENCES users(id)
   );
 `);
@@ -93,19 +97,19 @@ const authorize = (roles: string[]) => (req: any, res: any, next: any) => {
 };
 
 // API Routes
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', authenticate, authorize(['admin']), async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const userRole = role || 'customer';
     const info = db.prepare('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)').run(name, email, hashedPassword, userRole);
-    const token = jwt.sign({ id: info.lastInsertRowid, email, name, role: userRole }, JWT_SECRET);
-    res.json({ token, user: { id: info.lastInsertRowid, name, email, role: userRole } });
+    res.json({ message: 'User created successfully', user: { id: info.lastInsertRowid, name, email, role: userRole } });
   } catch (e: any) {
     res.status(400).json({ error: e.message.includes('UNIQUE') ? 'Email already exists' : 'Registration failed' });
   }
 });
 
+// Public login only
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   const user: any = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
@@ -117,27 +121,50 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+app.get('/api/auth/users', authenticate, authorize(['admin']), (req, res) => {
+  const users = db.prepare('SELECT id, name, email, role FROM users').all();
+  res.json(users);
+});
+
 app.get('/api/tickets', authenticate, (req: any, res) => {
   let tickets;
   if (req.user.role === 'admin' || req.user.role === 'staff') {
     tickets = db.prepare(`
-      SELECT tickets.*, users.name as userName, users.email as userEmail 
+      SELECT tickets.*, u1.name as userName, u1.email as userEmail, u2.name as agentName
       FROM tickets 
-      JOIN users ON tickets.userId = users.id 
+      JOIN users u1 ON tickets.userId = u1.id 
+      LEFT JOIN users u2 ON tickets.assignedTo = u2.id
       ORDER BY createdAt DESC
     `).all();
   } else {
-    tickets = db.prepare('SELECT * FROM tickets WHERE userId = ? ORDER BY createdAt DESC').all(req.user.id);
+    tickets = db.prepare(`
+      SELECT tickets.*, u2.name as agentName
+      FROM tickets 
+      LEFT JOIN users u2 ON tickets.assignedTo = u2.id
+      WHERE userId = ? 
+      ORDER BY createdAt DESC
+    `).all(req.user.id);
   }
   res.json(tickets);
 });
 
 app.post('/api/tickets', authenticate, (req: any, res) => {
   const { title, description, category, priority } = req.body;
-  const info = db.prepare('INSERT INTO tickets (userId, title, description, category, priority) VALUES (?, ?, ?, ?, ?)').run(
-    req.user.id, title, description, category, priority || 'medium'
+  
+  // Auto-assign to a random staff member if available
+  const staff = db.prepare("SELECT id FROM users WHERE role = 'staff' OR role = 'admin' ORDER BY RANDOM() LIMIT 1").get();
+  const assignedTo = staff ? staff.id : null;
+
+  const info = db.prepare('INSERT INTO tickets (userId, assignedTo, title, description, category, priority) VALUES (?, ?, ?, ?, ?, ?)').run(
+    req.user.id, assignedTo, title, description, category, priority || 'medium'
   );
-  const newTicket = db.prepare('SELECT * FROM tickets WHERE id = ?').get(info.lastInsertRowid);
+  
+  const newTicket = db.prepare(`
+    SELECT tickets.*, u2.name as agentName
+    FROM tickets 
+    LEFT JOIN users u2 ON tickets.assignedTo = u2.id
+    WHERE tickets.id = ?
+  `).get(info.lastInsertRowid);
   
   broadcast({ type: 'TICKET_CREATED', ticket: newTicket });
   res.json(newTicket);
@@ -146,25 +173,33 @@ app.post('/api/tickets', authenticate, (req: any, res) => {
 app.patch('/api/tickets/:id', authenticate, authorize(['admin', 'staff']), (req: any, res) => {
   const { status } = req.body;
   db.prepare('UPDATE tickets SET status = ? WHERE id = ?').run(status, req.params.id);
-  const updatedTicket = db.prepare('SELECT * FROM tickets WHERE id = ?').get(req.params.id);
+  
+  const updatedTicket = db.prepare(`
+    SELECT tickets.*, u1.name as userName, u1.email as userEmail, u2.name as agentName
+    FROM tickets 
+    JOIN users u1 ON tickets.userId = u1.id 
+    LEFT JOIN users u2 ON tickets.assignedTo = u2.id
+    WHERE tickets.id = ?
+  `).get(req.params.id);
+
   broadcast({ type: 'TICKET_UPDATED', ticket: updatedTicket });
   res.json(updatedTicket);
 });
 
-app.get('/api/messages', authenticate, (req, res) => {
+app.get('/api/messages/:ticketId', authenticate, (req: any, res) => {
   const messages = db.prepare(`
     SELECT messages.*, users.name as senderName, users.role as senderRole
     FROM messages
     JOIN users ON messages.senderId = users.id
+    WHERE messages.ticketId = ?
     ORDER BY createdAt ASC
-    LIMIT 100
-  `).all();
+  `).all(req.params.ticketId);
   res.json(messages);
 });
 
 app.post('/api/messages', authenticate, (req: any, res) => {
-  const { text } = req.body;
-  const info = db.prepare('INSERT INTO messages (senderId, text) VALUES (?, ?)').run(req.user.id, text);
+  const { text, ticketId } = req.body;
+  const info = db.prepare('INSERT INTO messages (ticketId, senderId, text) VALUES (?, ?, ?)').run(ticketId, req.user.id, text);
   const newMessage = db.prepare(`
     SELECT messages.*, users.name as senderName, users.role as senderRole
     FROM messages
@@ -172,7 +207,7 @@ app.post('/api/messages', authenticate, (req: any, res) => {
     WHERE messages.id = ?
   `).get(info.lastInsertRowid);
 
-  broadcast({ type: 'NEW_MESSAGE', message: newMessage });
+  broadcast({ type: 'NEW_MESSAGE', message: newMessage, ticketId });
   res.json(newMessage);
 });
 

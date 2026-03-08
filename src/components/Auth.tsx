@@ -46,45 +46,14 @@ export const AuthModal: React.FC<AuthProps> = ({ onSuccess, onClose }) => {
         <div className="p-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900">
-              {isLogin ? 'Welcome Back' : 'Create Account'}
+              Welcome Back
             </h2>
             <p className="text-gray-500 mt-2">
-              {isLogin ? 'Access your BASCORE dashboard' : 'Join BASCORE for premium support'}
+              Access your BASCORE dashboard
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    required
-                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#f1c232] focus:border-transparent outline-none transition-all"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {['customer', 'staff', 'admin'].map((role) => (
-                    <button
-                      key={role}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, role })}
-                      className={`py-2 text-xs font-bold rounded-lg border transition-all capitalize ${
-                        formData.role === role 
-                          ? 'bg-[#f1c232] border-[#f1c232] text-black' 
-                          : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-[#f1c232]'
-                      }`}
-                    >
-                      {role}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -121,21 +90,12 @@ export const AuthModal: React.FC<AuthProps> = ({ onSuccess, onClose }) => {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  {isLogin ? 'Login' : 'Register'}
+                  Login
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>
           </form>
-
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-gray-600 hover:text-[#f1c232] text-sm font-medium transition-colors"
-            >
-              {isLogin ? "Don't have an account? Register" : "Already have an account? Login"}
-            </button>
-          </div>
         </div>
       </motion.div>
     </div>

@@ -23,6 +23,7 @@ import { api, useWebSocket } from '../lib/api';
 interface Ticket {
   id: number;
   userId: number;
+  assignedTo?: number;
   title: string;
   description: string;
   status: 'open' | 'in-progress' | 'resolved' | 'closed';
@@ -31,15 +32,24 @@ interface Ticket {
   createdAt: string;
   userName?: string;
   userEmail?: string;
+  agentName?: string;
 }
 
 interface Message {
   id: number;
+  ticketId: number;
   senderId: number;
   senderName: string;
   senderRole: string;
   text: string;
   createdAt: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
 }
 
 interface DashboardProps {
@@ -55,24 +65,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
   const [showNewTicket, setShowNewTicket] = useState(false);
   const [newTicket, setNewTicket] = useState({ title: '', description: '', category: 'Network', priority: 'medium' });
   const [submitting, setSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState<'tickets' | 'chat'>('tickets');
+  const [activeTab, setActiveTab] = useState<'tickets' | 'chat' | 'users'>('tickets');
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [showNewUser, setShowNewUser] = useState(false);
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'customer' });
   const [newMessage, setNewMessage] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetchTickets();
-    fetchMessages();
+    if (user.role === 'admin') fetchUsers();
+    
     const cleanup = useWebSocket(token, (data) => {
       if (data.type === 'TICKET_CREATED') {
         setTickets(prev => [data.ticket, ...prev]);
       } else if (data.type === 'TICKET_UPDATED') {
         setTickets(prev => prev.map(t => t.id === data.ticket.id ? data.ticket : t));
       } else if (data.type === 'NEW_MESSAGE') {
-        setMessages(prev => [...prev, data.message]);
+        if (selectedTicketId === data.ticketId) {
+          setMessages(prev => [...prev, data.message]);
+        }
       }
     });
     return cleanup;
-  }, []);
+  }, [selectedTicketId]);
+
+  useEffect(() => {
+    if (selectedTicketId) {
+      fetchMessages(selectedTicketId);
+    }
+  }, [selectedTicketId]);
 
   const fetchTickets = async () => {
     try {
@@ -85,10 +108,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
     }
   };
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (ticketId: number) => {
     try {
-      const data = await api.get('/messages', token);
+      const data = await api.get(`/messages/${ticketId}`, token);
       setMessages(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const data = await api.get('/auth/users', token); // I need to add this endpoint to server.ts
+      setUsers(data);
     } catch (err) {
       console.error(err);
     }
@@ -118,12 +150,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !selectedTicketId) return;
     try {
-      await api.post('/messages', { text: newMessage }, token);
+      await api.post('/messages', { text: newMessage, ticketId: selectedTicketId }, token);
       setNewMessage('');
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await api.post('/auth/register', newUser, token);
+      setShowNewUser(false);
+      setNewUser({ name: '', email: '', password: '', role: 'customer' });
+      fetchUsers();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -181,7 +228,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                   </button>
                 )}
                 {user.role === 'admin' && (
-                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">
+                  <button 
+                    onClick={() => { setActiveTab('users'); setIsMobileMenuOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'users' ? 'bg-[#f1c232]/10 text-[#f1c232]' : 'text-gray-600 hover:bg-gray-50'}`}
+                  >
                     <Users className="w-5 h-5" /> Team Members
                   </button>
                 )}
@@ -228,7 +278,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
             </button>
           )}
           {user.role === 'admin' && (
-            <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">
+            <button 
+              onClick={() => setActiveTab('users')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'users' ? 'bg-[#f1c232]/10 text-[#f1c232]' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
               <Users className="w-5 h-5" /> Team Members
             </button>
           )}
@@ -333,6 +386,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                         <tr>
                           <th className="px-6 py-4 font-semibold">Ticket Details</th>
                           {isAdminOrStaff && <th className="px-6 py-4 font-semibold">Customer</th>}
+                          <th className="px-6 py-4 font-semibold">Assigned To</th>
                           <th className="px-6 py-4 font-semibold">Category</th>
                           <th className="px-6 py-4 font-semibold">Priority</th>
                           <th className="px-6 py-4 font-semibold">Status</th>
@@ -342,14 +396,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                       <tbody className="divide-y divide-gray-100">
                         {loading ? (
                           <tr>
-                            <td colSpan={isAdminOrStaff ? 7 : 6} className="px-6 py-12 text-center">
+                            <td colSpan={isAdminOrStaff ? 8 : 7} className="px-6 py-12 text-center">
                               <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#f1c232]" />
                               <p className="text-gray-500 mt-2">Loading tickets...</p>
                             </td>
                           </tr>
                         ) : tickets.length === 0 ? (
                           <tr>
-                            <td colSpan={isAdminOrStaff ? 7 : 6} className="px-6 py-12 text-center">
+                            <td colSpan={isAdminOrStaff ? 8 : 7} className="px-6 py-12 text-center">
                               <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Ticket className="w-8 h-8 text-gray-300" />
                               </div>
@@ -358,7 +412,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                           </tr>
                         ) : (
                           tickets.map((ticket) => (
-                            <tr key={ticket.id} className="hover:bg-gray-50 transition-colors group">
+                            <tr 
+                              key={ticket.id} 
+                              onClick={() => { setSelectedTicketId(ticket.id); setActiveTab('chat'); }}
+                              className="hover:bg-gray-50 transition-colors group cursor-pointer"
+                            >
                               <td className="px-6 py-4">
                                 <p className="text-sm font-bold text-gray-900">{ticket.title}</p>
                                 <p className="text-xs text-gray-500 truncate max-w-[200px]">{ticket.description}</p>
@@ -369,6 +427,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                                   <p className="text-xs text-gray-500">{ticket.userEmail}</p>
                                 </td>
                               )}
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-600">
+                                    {ticket.agentName ? ticket.agentName[0] : '?'}
+                                  </div>
+                                  <span className="text-sm text-gray-600">{ticket.agentName || 'Unassigned'}</span>
+                                </div>
+                              </td>
                               <td className="px-6 py-4">
                                 <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-600 rounded-md">
                                   {ticket.category}
@@ -387,6 +453,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                                   <select 
                                     className="text-sm bg-white border border-gray-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-[#f1c232]"
                                     value={ticket.status}
+                                    onClick={(e) => e.stopPropagation()}
                                     onChange={(e) => handleUpdateStatus(ticket.id, e.target.value)}
                                   >
                                     <option value="open">Open</option>
@@ -419,61 +486,153 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                   </div>
                 </div>
               </>
-            ) : isAdminOrStaff ? (
+            ) : activeTab === 'chat' ? (
               /* Chat Section */
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-200px)]">
-                <div className="p-6 border-b border-gray-100">
-                  <h2 className="text-lg font-bold text-gray-900">Internal Team Chat</h2>
-                  <p className="text-sm text-gray-500">Collaborate with staff and admins in real-time</p>
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">
+                      {selectedTicketId ? `Support Chat - Ticket #${selectedTicketId}` : 'Select a ticket to start chatting'}
+                    </h2>
+                    {selectedTicketId && (
+                      <p className="text-sm text-gray-500">
+                        {tickets.find(t => t.id === selectedTicketId)?.title}
+                      </p>
+                    )}
+                  </div>
+                  {selectedTicketId && (
+                    <button 
+                      onClick={() => setSelectedTicketId(null)}
+                      className="text-sm text-[#f1c232] font-bold hover:underline"
+                    >
+                      Back to Tickets
+                    </button>
+                  )}
                 </div>
                 
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                  {messages.map((msg) => (
-                    <div 
-                      key={msg.id} 
-                      className={`flex flex-col ${msg.senderId === user.id ? 'items-end' : 'items-start'}`}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-gray-900">{msg.senderName}</span>
-                        <span className="text-[10px] uppercase bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">
-                          {msg.senderRole}
-                        </span>
-                      </div>
-                      <div className={`max-w-[70%] p-3 rounded-2xl text-sm ${
-                        msg.senderId === user.id 
-                          ? 'bg-[#f1c232] text-black rounded-tr-none' 
-                          : 'bg-gray-100 text-gray-800 rounded-tl-none'
-                      }`}>
-                        {msg.text}
-                      </div>
-                      <span className="text-[10px] text-gray-400 mt-1">
-                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                {!selectedTicketId ? (
+                  <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+                    <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mb-4">
+                      <MessageSquare className="w-10 h-10 text-gray-300" />
                     </div>
-                  ))}
+                    <h3 className="text-xl font-bold text-gray-900">No Ticket Selected</h3>
+                    <p className="text-gray-500 max-w-xs mx-auto mt-2">
+                      Please select a ticket from the dashboard to view the conversation with your assigned agent.
+                    </p>
+                    <button 
+                      onClick={() => setActiveTab('tickets')}
+                      className="mt-6 bg-[#f1c232] text-black px-6 py-2 rounded-xl font-bold hover:bg-[#d9af2d] transition-all"
+                    >
+                      Go to Dashboard
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                      {messages.length === 0 ? (
+                        <div className="text-center py-12">
+                          <p className="text-gray-400 italic">No messages yet. Start the conversation!</p>
+                        </div>
+                      ) : (
+                        messages.map((msg) => (
+                          <div 
+                            key={msg.id} 
+                            className={`flex flex-col ${msg.senderId === user.id ? 'items-end' : 'items-start'}`}
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-bold text-gray-900">{msg.senderName}</span>
+                              <span className="text-[10px] uppercase bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">
+                                {msg.senderRole}
+                              </span>
+                            </div>
+                            <div className={`max-w-[70%] p-3 rounded-2xl text-sm ${
+                              msg.senderId === user.id 
+                                ? 'bg-[#f1c232] text-black rounded-tr-none' 
+                                : 'bg-gray-100 text-gray-800 rounded-tl-none'
+                            }`}>
+                              {msg.text}
+                            </div>
+                            <span className="text-[10px] text-gray-400 mt-1">
+                              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <form onSubmit={handleSendMessage} className="p-6 border-t border-gray-100 flex gap-4">
+                      <input 
+                        type="text"
+                        placeholder="Type your message..."
+                        className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#f1c232]"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                      />
+                      <button 
+                        type="submit"
+                        className="bg-[#f1c232] text-black px-6 py-2 rounded-xl font-bold hover:bg-[#d9af2d] transition-all"
+                      >
+                        Send
+                      </button>
+                    </form>
+                  </>
+                )}
+              </div>
+            ) : activeTab === 'users' && user.role === 'admin' ? (
+              /* User Management Section */
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">User Management</h2>
+                    <p className="text-sm text-gray-500">Create and manage staff and customer accounts</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowNewUser(true)}
+                    className="bg-[#f1c232] text-black px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#d9af2d] transition-all"
+                  >
+                    <Plus className="w-5 h-5" /> Add User
+                  </button>
                 </div>
 
-                <form onSubmit={handleSendMessage} className="p-6 border-t border-gray-100 flex gap-4">
-                  <input 
-                    type="text"
-                    placeholder="Type your message..."
-                    className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#f1c232]"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                  />
-                  <button 
-                    type="submit"
-                    className="bg-[#f1c232] text-black px-6 py-2 rounded-xl font-bold hover:bg-[#d9af2d] transition-all"
-                  >
-                    Send
-                  </button>
-                </form>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                      <tr>
+                        <th className="px-6 py-4 font-semibold">Name</th>
+                        <th className="px-6 py-4 font-semibold">Email</th>
+                        <th className="px-6 py-4 font-semibold">Role</th>
+                        <th className="px-6 py-4 font-semibold text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {users.map((u) => (
+                        <tr key={u.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4 font-medium text-gray-900">{u.name}</td>
+                          <td className="px-6 py-4 text-gray-600">{u.email}</td>
+                          <td className="px-6 py-4">
+                            <span className={`text-xs font-bold uppercase px-2 py-1 rounded-md ${
+                              u.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                              u.role === 'staff' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {u.role}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button className="text-gray-400 hover:text-red-600 transition-colors">
+                              <X className="w-5 h-5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ) : (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
                 <Shield className="w-16 h-16 mx-auto text-gray-200 mb-4" />
                 <h3 className="text-xl font-bold text-gray-900">Access Restricted</h3>
-                <p className="text-gray-500">This section is only available for BASCORE staff and administrators.</p>
+                <p className="text-gray-500">This section is only available for authorized BASCORE personnel.</p>
               </div>
             )}
           </div>
@@ -558,6 +717,79 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, token, onLogout }) =
                   className="w-full bg-[#f1c232] text-black font-bold py-3 rounded-xl hover:bg-[#d9af2d] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
                 >
                   {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Submit Ticket'}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* New User Modal */}
+      <AnimatePresence>
+        {showNewUser && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+            >
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-900">Create New User</h3>
+                <button onClick={() => setShowNewUser(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleCreateUser} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#f1c232] outline-none"
+                    value={newUser.name}
+                    onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#f1c232] outline-none"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Password</label>
+                  <input
+                    type="password"
+                    required
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#f1c232] outline-none"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Role</label>
+                  <select
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#f1c232] outline-none"
+                    value={newUser.role}
+                    onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                  >
+                    <option value="customer">Customer</option>
+                    <option value="staff">Staff</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-[#f1c232] text-black font-bold py-3 rounded-xl hover:bg-[#d9af2d] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create User'}
                 </button>
               </form>
             </motion.div>
