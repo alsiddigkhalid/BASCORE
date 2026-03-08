@@ -65,7 +65,8 @@ const translations = {
     hero: {
       badge: 'Telecom & ELV System Integration in UAE',
       title: 'Bespoke Connectivity',
-      titleSpan: 'Solutions for Business.',
+      titlePrefix: 'Solutions for ',
+      words: ['Support', 'Security', 'Services'],
       desc: 'At BASCORE, we specialize in delivering bespoke structured cabling, fiber optic, and wireless communication solutions to meet the diverse needs of businesses across the UAE.',
       getStarted: 'Get Started',
       discover: 'Discover Our Services',
@@ -290,7 +291,8 @@ const translations = {
     hero: {
       badge: 'تكامل أنظمة الاتصالات و ELV في الإمارات',
       title: 'حلول اتصال مخصصة',
-      titleSpan: 'لأعمالك.',
+      titlePrefix: 'لـ ',
+      words: ['دعم', 'أمن', 'خدمات'],
       desc: 'في BASCORE، نحن متخصصون في تقديم حلول مخصصة للكابلات الهيكلية، والألياف الضوئية، وحلول الاتصالات اللاسلكية لتلبية الاحتياجات المتنوعة للشركات في جميع أنحاء الإمارات.',
       getStarted: 'ابدأ الآن',
       discover: 'اكتشف خدماتنا',
@@ -507,6 +509,34 @@ const Skeleton = ({ className, dark = false }: { className?: string, dark?: bool
     <div className={`shimmer ${dark ? 'shimmer-dark' : ''}`} />
   </div>
 );
+
+const WordSlider = ({ words }: { words: string[] }) => {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % words.length);
+    }, 2500);
+    return () => clearInterval(timer);
+  }, [words.length]);
+
+  return (
+    <div className="inline-flex relative h-[1.1em] overflow-hidden align-bottom min-w-[3ch]">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={index}
+          initial={{ y: '100%', opacity: 0 }}
+          animate={{ y: '0%', opacity: 1 }}
+          exit={{ y: '-100%', opacity: 0 }}
+          transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+          className="text-brand whitespace-nowrap"
+        >
+          {words[index]}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+};
 
 const ConsultationModal = ({ isOpen, onClose, t }: { isOpen: boolean, onClose: () => void, t: any }) => {
   const [formData, setFormData] = useState({
@@ -776,7 +806,8 @@ const Hero = ({ t, onConsultation }: { t: any, onConsultation: () => void }) => 
             className="text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-[1.1]"
           >
             {t.hero.title} <br className="hidden md:block" />
-            <span className="text-brand">{t.hero.titleSpan}</span>
+            <span className="text-slate-900">{t.hero.titlePrefix}</span>
+            <WordSlider words={t.hero.words} />
           </motion.h1>
           
           <motion.p 
