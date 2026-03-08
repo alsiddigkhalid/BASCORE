@@ -31,7 +31,9 @@ db.exec(`
     status TEXT DEFAULT 'open',
     priority TEXT DEFAULT 'medium',
     category TEXT NOT NULL,
+    type TEXT DEFAULT 'Question',
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (userId) REFERENCES users(id),
     FOREIGN KEY (assignedTo) REFERENCES users(id)
   );
@@ -41,11 +43,26 @@ db.exec(`
     ticketId INTEGER NOT NULL,
     senderId INTEGER NOT NULL,
     text TEXT NOT NULL,
+    isPrivate INTEGER DEFAULT 0,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ticketId) REFERENCES tickets(id),
     FOREIGN KEY (senderId) REFERENCES users(id)
   );
 `);
+
+// Migration: Add missing columns if they don't exist
+const tableInfo = db.prepare("PRAGMA table_info(tickets)").all();
+if (!tableInfo.some((col: any) => col.name === 'type')) {
+  try { db.exec("ALTER TABLE tickets ADD COLUMN type TEXT DEFAULT 'Question'"); } catch (e) {}
+}
+if (!tableInfo.some((col: any) => col.name === 'updatedAt')) {
+  try { db.exec("ALTER TABLE tickets ADD COLUMN updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP"); } catch (e) {}
+}
+
+const msgTableInfo = db.prepare("PRAGMA table_info(messages)").all();
+if (!msgTableInfo.some((col: any) => col.name === 'isPrivate')) {
+  try { db.exec("ALTER TABLE messages ADD COLUMN isPrivate INTEGER DEFAULT 0"); } catch (e) {}
+}
 
 const app = express();
 const httpServer = createServer(app);
@@ -149,19 +166,23 @@ app.get('/api/tickets', authenticate, (req: any, res) => {
 });
 
 app.post('/api/tickets', authenticate, (req: any, res) => {
-  const { title, description, category, priority } = req.body;
+  const { title, description, category, priority, type, assignedTo: manualAssignedTo } = req.body;
   
-  // Auto-assign to a random staff member if available
-  const staff = db.prepare("SELECT id FROM users WHERE role = 'staff' OR role = 'admin' ORDER BY RANDOM() LIMIT 1").get();
-  const assignedTo = staff ? staff.id : null;
+  let assignedTo = manualAssignedTo;
 
-  const info = db.prepare('INSERT INTO tickets (userId, assignedTo, title, description, category, priority) VALUES (?, ?, ?, ?, ?, ?)').run(
-    req.user.id, assignedTo, title, description, category, priority || 'medium'
+  if (!assignedTo) {
+    const staff = db.prepare("SELECT id FROM users WHERE role = 'staff' OR role = 'admin' ORDER BY RANDOM() LIMIT 1").get();
+    assignedTo = staff ? staff.id : null;
+  }
+
+  const info = db.prepare('INSERT INTO tickets (userId, assignedTo, title, description, category, priority, type) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+    req.user.id, assignedTo, title, description, category, priority || 'medium', type || 'Question'
   );
   
   const newTicket = db.prepare(`
-    SELECT tickets.*, u2.name as agentName
+    SELECT tickets.*, u1.name as userName, u1.email as userEmail, u2.name as agentName
     FROM tickets 
+    JOIN users u1 ON tickets.userId = u1.id
     LEFT JOIN users u2 ON tickets.assignedTo = u2.id
     WHERE tickets.id = ?
   `).get(info.lastInsertRowid);
@@ -171,8 +192,21 @@ app.post('/api/tickets', authenticate, (req: any, res) => {
 });
 
 app.patch('/api/tickets/:id', authenticate, authorize(['admin', 'staff']), (req: any, res) => {
-  const { status } = req.body;
-  db.prepare('UPDATE tickets SET status = ? WHERE id = ?').run(status, req.params.id);
+  const { status, priority, type, assignedTo } = req.body;
+  
+  const updates: string[] = [];
+  const params: any[] = [];
+
+  if (status !== undefined) { updates.push('status = ?'); params.push(status); }
+  if (priority !== undefined) { updates.push('priority = ?'); params.push(priority); }
+  if (type !== undefined) { updates.push('type = ?'); params.push(type); }
+  if (assignedTo !== undefined) { updates.push('assignedTo = ?'); params.push(assignedTo); }
+  
+  if (updates.length > 0) {
+    updates.push('updatedAt = CURRENT_TIMESTAMP');
+    params.push(req.params.id);
+    db.prepare(`UPDATE tickets SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+  }
   
   const updatedTicket = db.prepare(`
     SELECT tickets.*, u1.name as userName, u1.email as userEmail, u2.name as agentName
@@ -192,14 +226,18 @@ app.get('/api/messages/:ticketId', authenticate, (req: any, res) => {
     FROM messages
     JOIN users ON messages.senderId = users.id
     WHERE messages.ticketId = ?
+    AND (isPrivate = 0 OR ? IN ('admin', 'staff'))
     ORDER BY createdAt ASC
-  `).all(req.params.ticketId);
+  `).all(req.params.ticketId, req.user.role);
   res.json(messages);
 });
 
 app.post('/api/messages', authenticate, (req: any, res) => {
-  const { text, ticketId } = req.body;
-  const info = db.prepare('INSERT INTO messages (ticketId, senderId, text) VALUES (?, ?, ?)').run(ticketId, req.user.id, text);
+  const { text, ticketId, isPrivate } = req.body;
+  const info = db.prepare('INSERT INTO messages (ticketId, senderId, text, isPrivate) VALUES (?, ?, ?, ?)').run(
+    ticketId, req.user.id, text, isPrivate ? 1 : 0
+  );
+  
   const newMessage = db.prepare(`
     SELECT messages.*, users.name as senderName, users.role as senderRole
     FROM messages
@@ -207,8 +245,16 @@ app.post('/api/messages', authenticate, (req: any, res) => {
     WHERE messages.id = ?
   `).get(info.lastInsertRowid);
 
+  db.prepare('UPDATE tickets SET updatedAt = CURRENT_TIMESTAMP WHERE id = ?').run(ticketId);
+
   broadcast({ type: 'NEW_MESSAGE', message: newMessage, ticketId });
   res.json(newMessage);
+});
+
+// Global Error Handler
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error(err);
+  res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
 
 // Vite Integration
