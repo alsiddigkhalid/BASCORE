@@ -20,8 +20,23 @@ import {
   Languages
 } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { AuthModal } from './components/Auth';
 import { Dashboard } from './components/Dashboard';
+
+// --- Service Pages ---
+import StructuredCabling from './pages/services/StructuredCabling';
+import FiberOptics from './pages/services/FiberOptics';
+import WirelessCommunication from './pages/services/WirelessCommunication';
+import ELVSystems from './pages/services/ELVSystems';
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
 
 // --- Translations ---
 
@@ -81,6 +96,11 @@ const translations = {
           title: 'Wireless Communication',
           desc: 'Robust wireless networks providing seamless connectivity across your entire business premises.',
           features: ['Wi-Fi 6 Solutions', 'Point-to-Point Links', 'Wireless Site Surveys', 'Outdoor Wireless'],
+        },
+        {
+          title: 'ELV Systems',
+          desc: 'Integrated Extra Low Voltage systems for security, safety, and building automation.',
+          features: ['CCTV & Surveillance', 'Access Control', 'Public Address', 'SMATV & IPTV'],
         }
       ],
       learnMore: 'Discover More'
@@ -144,7 +164,93 @@ const translations = {
         { title: 'Innovation', desc: 'We stay ahead by adopting the latest technologies and methodologies.' },
         { title: 'Sustainability', desc: 'We prioritize eco-friendly solutions for a greener tomorrow.' },
         { title: 'Excellence', desc: 'We strive for perfection in every project we undertake.' }
-      ]
+      ],
+      leadership: {
+        title: 'Our Leadership',
+        subtitle: 'The visionaries behind BASCORE',
+        members: [
+          {
+            name: 'Askar Bibayev',
+            role: 'CEO & Founder',
+            image: 'https://instagram.fdxb3-3.fna.fbcdn.net/v/t51.82787-15/625122385_18187558837360796_5965981383787006934_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=104&ig_cache_key=MzIwMTg0NzExNjM2NjQ4OTA4MQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6InhwaWRzLjE0NDB4MTgwMC5zZHIuQzMifQ%3D%3D&_nc_ohc=UrfOXg252wcQ7kNvwFLm10c&_nc_oc=Adkx7DxB0u8jHR1OLpm2xdyTsL5gfNnNTRLQ-6rOHJktm4uUy2L4JaXsDv2JmO8YrDg1ivWpjXsL6H_sgI6X4637&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=instagram.fdxb3-3.fna&_nc_gid=cIyJ3KR2Mz62WQJrX0EQgA&_nc_ss=8&oh=00_AfwUqK1rF0PIa3N3uD0zNCtN2VSjgTuRyn-YkYMp1JFLjw&oe=69B3459F'
+          },
+          {
+            name: 'ALSIDDIG MAHMOUD',
+            role: 'CTO',
+            image: 'https://scontent.fdxb3-3.fna.fbcdn.net/v/t39.30808-6/465702844_27727947166819133_4779844027167601342_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=ca4fef&_nc_ohc=mHkRI5eGUukQ7kNvwHMxHOa&_nc_oc=AdmsUfxNafQBO3MRFjx_LYXEEw1icdyZrm1dqjR9ZRcDB5G1RDEGO7lBSUK1hygMcBsnNPBDENg9He-SQVAhtWHt&_nc_zt=23&_nc_ht=scontent.fdxb3-3.fna&_nc_gid=GBSAPfxLiP81oL71Ui1FTg&_nc_ss=8&oh=00_AfyNLvbCJ3B_WenctFhrX6kU-DyZBcS06C_IqqXQYoFXqQ&oe=69B32629'
+          }
+        ]
+      },
+      serviceDetails: {
+        back: 'Back to Home',
+        offerings: 'Our Offerings',
+        benefits: 'Key Benefits',
+        industries: 'Target Industries',
+        cabling: {
+          title: 'Structured Cabling Solutions',
+          desc: 'BASCORE provides end-to-end structured cabling solutions that form the backbone of your business communication. Our designs prioritize scalability, reliability, and international standards.',
+          items: [
+            { title: 'Cat6 & Cat6A Cabling', desc: 'High-speed copper solutions for modern office environments.' },
+            { title: 'Data Center Cabling', desc: 'Optimized rack-to-rack and row-to-row connectivity.' },
+            { title: 'Testing & Certification', desc: 'Comprehensive Fluke testing and certification for all installations.' },
+            { title: 'Cable Management', desc: 'Neat and organized cable routing for better maintenance and airflow.' }
+          ],
+          benefits: [
+            'Scalability for future growth',
+            'Reduced downtime and easier troubleshooting',
+            'Improved network performance and reliability',
+            'Enhanced aesthetic and organized infrastructure'
+          ]
+        },
+        fiber: {
+          title: 'Fiber Optic Solutions',
+          desc: 'Experience lightning-fast connectivity with our advanced fiber optic solutions. We specialize in high-speed data transmission for enterprises and industrial environments.',
+          items: [
+            { title: 'Splicing & Termination', desc: 'Precision fusion splicing for minimal signal loss.' },
+            { title: 'Backbone Installations', desc: 'High-capacity fiber backbones for campus and multi-story buildings.' },
+            { title: 'OTDR Testing', desc: 'Advanced diagnostics to ensure peak performance and integrity.' },
+            { title: 'FTTX Solutions', desc: 'Fiber-to-the-X deployments for residential and commercial complexes.' }
+          ],
+          benefits: [
+            'Immunity to electromagnetic interference',
+            'Extremely high bandwidth over long distances',
+            'Future-proof technology for decades',
+            'Secure data transmission'
+          ]
+        },
+        wireless: {
+          title: 'Wireless Communication',
+          desc: 'Stay connected anywhere. BASCORE provides robust wireless solutions that ensure seamless connectivity across your entire business premises, from indoor offices to outdoor campuses.',
+          items: [
+            { title: 'Wi-Fi 6 Solutions', desc: 'High-density wireless networks for modern workspaces.' },
+            { title: 'Point-to-Point Links', desc: 'Wireless backbone connectivity between distant locations.' },
+            { title: 'Wireless Site Surveys', desc: 'Detailed heatmaps and signal analysis for optimal coverage.' },
+            { title: 'Outdoor Wireless', desc: 'Ruggedized wireless solutions for campuses and public spaces.' }
+          ],
+          benefits: [
+            'Seamless mobility for employees and visitors',
+            'Reduced cabling costs for large areas',
+            'Scalable coverage with mesh technology',
+            'High-speed connectivity without physical constraints'
+          ]
+        },
+        elv: {
+          title: 'ELV Systems Integration',
+          desc: 'Extra Low Voltage (ELV) systems are the intelligence of modern buildings. BASCORE integrates security, communication, and safety systems into a unified, easy-to-manage infrastructure.',
+          items: [
+            { title: 'CCTV & Surveillance', desc: 'IP-based high-definition security cameras and monitoring.' },
+            { title: 'Access Control', desc: 'Biometric and card-based entry management systems.' },
+            { title: 'Public Address (PA/GA)', desc: 'Clear and reliable audio distribution for announcements.' },
+            { title: 'SMATV & IPTV', desc: 'Centralized television and media distribution for hospitality.' }
+          ],
+          benefits: [
+            'Enhanced security and asset protection',
+            'Centralized management of building systems',
+            'Seamless integration with network infrastructure',
+            'Improved safety for occupants and visitors'
+          ]
+        }
+      }
     }
   },
   ar: {
@@ -202,6 +308,11 @@ const translations = {
           title: 'الاتصالات اللاسلكية',
           desc: 'شبكات لاسلكية قوية توفر اتصالاً سلساً عبر كامل مقر عملك.',
           features: ['حلول Wi-Fi 6', 'روابط النقطة إلى النقطة', 'مسوحات الموقع اللاسلكي', 'اللاسلكي الخارجي'],
+        },
+        {
+          title: 'أنظمة ELV',
+          desc: 'أنظمة الجهد المنخفض الإضافي المتكاملة للأمن والسلامة وأتمتة المباني.',
+          features: ['كاميرات المراقبة', 'أنظمة التحكم في الدخول', 'أنظمة النداء العام', 'أنظمة التلفزيون المركزي'],
         }
       ],
       learnMore: 'اكتشف المزيد'
@@ -265,7 +376,93 @@ const translations = {
         { title: 'الابتكار', desc: 'نبقى في الطليعة من خلال اعتماد أحدث التقنيات والمنهجيات.' },
         { title: 'الاستدامة', desc: 'نعطي الأولوية للحلول الصديقة للبيئة من أجل غد أكثر خضرة.' },
         { title: 'التميز', desc: 'نسعى جاهدين للكمال في كل مشروع نقوم به.' }
-      ]
+      ],
+      leadership: {
+        title: 'قيادتنا',
+        subtitle: 'المبدعون وراء BASCORE',
+        members: [
+          {
+            name: 'Askar Bibayev',
+            role: 'الرئيس التنفيذي والمؤسس',
+            image: 'https://instagram.fdxb3-3.fna.fbcdn.net/v/t51.82787-15/625122385_18187558837360796_5965981383787006934_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=104&ig_cache_key=MzIwMTg0NzExNjM2NjQ4OTA4MQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6InhwaWRzLjE0NDB4MTgwMC5zZHIuQzMifQ%3D%3D&_nc_ohc=UrfOXg252wcQ7kNvwFLm10c&_nc_oc=Adkx7DxB0u8jHR1OLpm2xdyTsL5gfNnNTRLQ-6rOHJktm4uUy2L4JaXsDv2JmO8YrDg1ivWpjXsL6H_sgI6X4637&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=instagram.fdxb3-3.fna&_nc_gid=cIyJ3KR2Mz62WQJrX0EQgA&_nc_ss=8&oh=00_AfwUqK1rF0PIa3N3uD0zNCtN2VSjgTuRyn-YkYMp1JFLjw&oe=69B3459F'
+          },
+          {
+            name: 'ALSIDDIG MAHMOUD',
+            role: 'المدير التقني',
+            image: 'https://scontent.fdxb3-3.fna.fbcdn.net/v/t39.30808-6/465702844_27727947166819133_4779844027167601342_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=ca4fef&_nc_ohc=mHkRI5eGUukQ7kNvwHMxHOa&_nc_oc=AdmsUfxNafQBO3MRFjx_LYXEEw1icdyZrm1dqjR9ZRcDB5G1RDEGO7lBSUK1hygMcBsnNPBDENg9He-SQVAhtWHt&_nc_zt=23&_nc_ht=scontent.fdxb3-3.fna&_nc_gid=GBSAPfxLiP81oL71Ui1FTg&_nc_ss=8&oh=00_AfyNLvbCJ3B_WenctFhrX6kU-DyZBcS06C_IqqXQYoFXqQ&oe=69B32629'
+          }
+        ]
+      },
+      serviceDetails: {
+        back: 'العودة للرئيسية',
+        offerings: 'خدماتنا',
+        benefits: 'المزايا الرئيسية',
+        industries: 'الصناعات المستهدفة',
+        cabling: {
+          title: 'حلول الكابلات الهيكلية',
+          desc: 'توفر BASCORE حلول كابلات هيكلية متكاملة تشكل العمود الفقري لاتصالات عملك. تصاميمنا تعطي الأولوية لقابلية التوسع والموثوقية والمعايير الدولية.',
+          items: [
+            { title: 'كابلات Cat6 و Cat6A', desc: 'حلول نحاسية عالية السرعة لبيئات المكاتب الحديثة.' },
+            { title: 'كابلات مراكز البيانات', desc: 'اتصال محسن بين الرفوف والصفوف.' },
+            { title: 'الاختبار والاعتماد', desc: 'اختبار Fluke شامل واعتماد لجميع التركيبات.' },
+            { title: 'إدارة الكابلات', desc: 'توجيه كابلات مرتب ومنظم لصيانة وتدفق هواء أفضل.' }
+          ],
+          benefits: [
+            'قابلة للتوسع للنمو المستقبلي',
+            'تقليل وقت التوقف وسهولة استكشاف الأخطاء وإصلاحها',
+            'تحسين أداء الشبكة وموثوقيتها',
+            'تحسين المظهر الجمالي والبنية التحتية المنظمة'
+          ]
+        },
+        fiber: {
+          title: 'حلول الألياف الضوئية',
+          desc: 'استمتع باتصال فائق السرعة مع حلول الألياف الضوئية المتقدمة لدينا. نحن متخصصون في نقل البيانات عالي السرعة للمؤسسات والبيئات الصناعية.',
+          items: [
+            { title: 'اللحام والإنهاء', desc: 'لحام انصهار دقيق لتقليل فقدان الإشارة.' },
+            { title: 'تركيبات العمود الفقري', desc: 'أعمدة فقرية من الألياف عالية السعة للمجمعات والمباني متعددة الطوابق.' },
+            { title: 'اختبار OTDR', desc: 'تشخيصات متقدمة لضمان ذروة الأداء والنزاهة.' },
+            { title: 'حلول FTTX', desc: 'نشر الألياف إلى المواقع المختلفة للمجمعات السكنية والتجارية.' }
+          ],
+          benefits: [
+            'حصانة ضد التداخل الكهرومغناطيسي',
+            'نطاق ترددي عالٍ جداً عبر مسافات طويلة',
+            'تكنولوجيا جاهزة للمستقبل لعقود',
+            'نقل بيانات آمن'
+          ]
+        },
+        wireless: {
+          title: 'الاتصالات اللاسلكية',
+          desc: 'ابق على اتصال في أي مكان. توفر BASCORE حلولاً لاسلكية قوية تضمن اتصالاً سلساً عبر كامل مقر عملك، من المكاتب الداخلية إلى المجمعات الخارجية.',
+          items: [
+            { title: 'حلول Wi-Fi 6', desc: 'شبكات لاسلكية عالية الكثافة لمساحات العمل الحديثة.' },
+            { title: 'روابط النقطة إلى النقطة', desc: 'اتصال العمود الفقري اللاسلكي بين المواقع البعيدة.' },
+            { title: 'مسوحات الموقع اللاسلكي', desc: 'خرائط حرارية مفصلة وتحليل الإشارة للتغطية المثلى.' },
+            { title: 'اللاسلكي الخارجي', desc: 'حلول لاسلكية قوية للمجمعات والمساحات العامة.' }
+          ],
+          benefits: [
+            'تنقل سلس للموظفين والزوار',
+            'تقليل تكاليف الكابلات للمساحات الكبيرة',
+            'تغطية قابلة للتوسع مع تقنية Mesh',
+            'اتصال عالي السرعة بدون قيود مادية'
+          ]
+        },
+        elv: {
+          title: 'تكامل أنظمة ELV',
+          desc: 'أنظمة الجهد المنخفض الإضافي (ELV) هي ذكاء المباني الحديثة. تدمج BASCORE أنظمة الأمن والاتصالات والسلامة في بنية تحتية موحدة وسهلة الإدارة.',
+          items: [
+            { title: 'كاميرات المراقبة', desc: 'كاميرات أمنية عالية الدقة تعتمد على IP والمراقبة.' },
+            { title: 'التحكم في الدخول', desc: 'أنظمة إدارة الدخول القائمة على القياسات الحيوية والبطاقات.' },
+            { title: 'النداء العام (PA/GA)', desc: 'توزيع صوتي واضح وموثوق للإعلانات.' },
+            { title: 'SMATV و IPTV', desc: 'توزيع مركزي للتلفزيون والوسائط لقطاع الضيافة.' }
+          ],
+          benefits: [
+            'تعزيز الأمن وحماية الأصول',
+            'إدارة مركزية لأنظمة المباني',
+            'تكامل سلس مع البنية التحتية للشبكة',
+            'تحسين السلامة للشاغلين والزوار'
+          ]
+        }
+      }
     }
   }
 };
@@ -273,10 +470,10 @@ const translations = {
 // --- Components ---
 
 const Logo = ({ className = "" }: { className?: string }) => (
-  <div className={`flex flex-col leading-none ${className}`}>
+  <Link to="/" className={`flex flex-col leading-none ${className}`}>
     <span className="text-2xl md:text-3xl font-black tracking-tighter text-[#f1c232]">BASCORE</span>
     <span className="text-[6px] md:text-[8px] font-bold tracking-[0.2em] text-[#f1c232] opacity-90">COMMUNICATION SYSTEMS INSTALLATION</span>
-  </div>
+  </Link>
 );
 
 const Skeleton = ({ className, dark = false }: { className?: string, dark?: boolean, key?: any }) => (
@@ -308,10 +505,10 @@ const Navbar = ({ lang, setLang, t, onAuth }: { lang: string, setLang: (l: strin
         <Logo />
 
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-          <a href="#" className="hover:text-brand transition-colors">{t.nav.home}</a>
-          <a href="#" className="hover:text-brand transition-colors">{t.nav.about}</a>
-          <a href="#" className="hover:text-brand transition-colors">{t.nav.services}</a>
-          <a href="#" className="hover:text-brand transition-colors">{t.nav.contact}</a>
+          <Link to="/" className="hover:text-brand transition-colors">{t.nav.home}</Link>
+          <a href="/#about" className="hover:text-brand transition-colors">{t.nav.about}</a>
+          <a href="/#services" className="hover:text-brand transition-colors">{t.nav.services}</a>
+          <a href="/#contact" className="hover:text-brand transition-colors">{t.nav.contact}</a>
         </div>
 
         <div className="hidden md:flex items-center gap-4">
@@ -350,10 +547,10 @@ const Navbar = ({ lang, setLang, t, onAuth }: { lang: string, setLang: (l: strin
             className="absolute top-full left-0 right-0 bg-white border-b border-slate-100 p-6 md:hidden shadow-xl"
           >
             <div className="flex flex-col gap-6">
-              <a href="#" className="text-lg font-medium">{t.nav.home}</a>
-              <a href="#" className="text-lg font-medium">{t.nav.about}</a>
-              <a href="#" className="text-lg font-medium">{t.nav.services}</a>
-              <a href="#" className="text-lg font-medium">{t.nav.contact}</a>
+              <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">{t.nav.home}</Link>
+              <a href="/#about" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">{t.nav.about}</a>
+              <a href="/#services" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">{t.nav.services}</a>
+              <a href="/#contact" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">{t.nav.contact}</a>
               <hr className="border-slate-100" />
               <button 
                 onClick={onAuth}
@@ -555,15 +752,27 @@ const AboutUs = ({ t }: { t: any }) => (
             </div>
           ))}
           
-          <div className="col-span-full mt-8 relative rounded-3xl overflow-hidden h-64">
-            <img 
-              src="https://picsum.photos/seed/team/800/600" 
-              alt="Our Team" 
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent flex items-end p-8">
-              <p className="text-white font-bold text-xl">20+ Years of Excellence</p>
+          <div className="col-span-full mt-12">
+            <h3 className="text-3xl font-bold mb-8">{t.aboutSection.leadership.title}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              {t.aboutSection.leadership.members.map((member: any, i: number) => (
+                <motion.div 
+                  key={i}
+                  whileHover={{ y: -10 }}
+                  className="group relative rounded-3xl overflow-hidden aspect-[4/5] shadow-xl"
+                >
+                  <img 
+                    src={member.image} 
+                    alt={member.name} 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent flex flex-col justify-end p-8">
+                    <h4 className="text-2xl font-bold text-white mb-1">{member.name}</h4>
+                    <p className="text-brand font-semibold uppercase tracking-wider text-sm">{member.role}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </motion.div>
@@ -581,7 +790,7 @@ const Services = ({ t }: { t: any }) => {
   }, []);
 
   return (
-    <section className="py-24">
+    <section className="py-24" id="services">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div className="max-w-2xl">
@@ -595,9 +804,9 @@ const Services = ({ t }: { t: any }) => {
           </button>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {loading ? (
-            Array(3).fill(0).map((_, i) => (
+            Array(4).fill(0).map((_, i) => (
               <div key={i} className="bento-card flex flex-col h-full">
                 <Skeleton className="w-14 h-14 rounded-2xl mb-8" />
                 <Skeleton className="w-3/4 h-8 mb-4" />
@@ -624,7 +833,7 @@ const Services = ({ t }: { t: any }) => {
                       ease: "easeInOut",
                     }}
                   >
-                    {i === 0 ? <Cable className="text-brand" size={28} /> : i === 1 ? <Network className="text-brand" size={28} /> : <Wifi className="text-brand" size={28} />}
+                    {i === 0 ? <Cable className="text-brand" size={28} /> : i === 1 ? <Network className="text-brand" size={28} /> : i === 2 ? <Wifi className="text-brand" size={28} /> : <Shield className="text-brand" size={28} />}
                   </motion.div>
                 </div>
                 <h3 className="text-2xl font-bold mb-4">{service.title}</h3>
@@ -637,9 +846,12 @@ const Services = ({ t }: { t: any }) => {
                     </li>
                   ))}
                 </ul>
-                <button className="w-full py-3 rounded-xl border border-slate-200 font-bold hover:bg-slate-900 hover:text-white transition-all">
+                <Link 
+                  to={i === 0 ? "/services/structured-cabling" : i === 1 ? "/services/fiber-optics" : i === 2 ? "/services/wireless-communication" : "/services/elv-systems"}
+                  className="w-full py-3 rounded-xl border border-slate-200 font-bold hover:bg-slate-900 hover:text-white transition-all text-center block"
+                >
                   {t.services.learnMore}
-                </button>
+                </Link>
               </div>
             ))
           )}
@@ -818,54 +1030,65 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen">
-      <Navbar lang={lang} setLang={setLang} t={t} onAuth={() => setShowAuth(true)} />
-      <Hero t={t} onAuth={() => setShowAuth(true)} />
-      <TrustBar t={t} />
-      <WhyBascore t={t} />
-      <AboutUs t={t} />
-      <Services t={t} />
-      <PortfolioShowcase t={t} />
-      <Stats t={t} />
-      
-      {/* CTA Section */}
-      <section className="py-24">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="bg-slate-900 rounded-[40px] p-12 md:p-24 text-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full bg-brand/10 blur-[100px]" />
-            <div className="relative z-10">
-              <h2 className="text-4xl md:text-6xl font-bold text-white mb-8">
-                {t.cta.title}
-              </h2>
-              <p className="text-xl text-slate-400 mb-12 max-w-2xl mx-auto">
-                {t.cta.desc}
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button 
-                  onClick={() => setShowAuth(true)}
-                  className="w-full sm:w-auto bg-brand text-white px-10 py-5 rounded-full text-xl font-bold hover:bg-brand-dark transition-all shadow-2xl shadow-brand/40"
-                >
-                  {t.cta.btn1}
-                </button>
-                <button className="w-full sm:w-auto bg-white/10 text-white px-10 py-5 rounded-full text-xl font-bold hover:bg-white/20 transition-all backdrop-blur-md border border-white/10">
-                  {t.cta.btn2}
-                </button>
+    <>
+      <ScrollToTop />
+      <Routes>
+      <Route path="/" element={
+        <div className="min-h-screen">
+          <Navbar lang={lang} setLang={setLang} t={t} onAuth={() => setShowAuth(true)} />
+          <Hero t={t} onAuth={() => setShowAuth(true)} />
+          <TrustBar t={t} />
+          <WhyBascore t={t} />
+          <AboutUs t={t} />
+          <Services t={t} />
+          <PortfolioShowcase t={t} />
+          <Stats t={t} />
+          
+          {/* CTA Section */}
+          <section className="py-24" id="contact">
+            <div className="max-w-7xl mx-auto px-6">
+              <div className="bg-slate-900 rounded-[40px] p-12 md:p-24 text-center relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-full bg-brand/10 blur-[100px]" />
+                <div className="relative z-10">
+                  <h2 className="text-4xl md:text-6xl font-bold text-white mb-8">
+                    {t.cta.title}
+                  </h2>
+                  <p className="text-xl text-slate-400 mb-12 max-w-2xl mx-auto">
+                    {t.cta.desc}
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button 
+                      onClick={() => setShowAuth(true)}
+                      className="w-full sm:w-auto bg-brand text-white px-10 py-5 rounded-full text-xl font-bold hover:bg-brand-dark transition-all shadow-2xl shadow-brand/40"
+                    >
+                      {t.cta.btn1}
+                    </button>
+                    <button className="w-full sm:w-auto bg-white/10 text-white px-10 py-5 rounded-full text-xl font-bold hover:bg-white/20 transition-all backdrop-blur-md border border-white/10">
+                      {t.cta.btn2}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </section>
+
+          <Footer t={t} />
+
+          <AnimatePresence>
+            {showAuth && (
+              <AuthModal 
+                onSuccess={handleAuthSuccess} 
+                onClose={() => setShowAuth(false)} 
+              />
+            )}
+          </AnimatePresence>
         </div>
-      </section>
-
-      <Footer t={t} />
-
-      <AnimatePresence>
-        {showAuth && (
-          <AuthModal 
-            onSuccess={handleAuthSuccess} 
-            onClose={() => setShowAuth(false)} 
-          />
-        )}
-      </AnimatePresence>
-    </div>
+      } />
+      <Route path="/services/structured-cabling" element={<StructuredCabling t={t} lang={lang} />} />
+      <Route path="/services/fiber-optics" element={<FiberOptics t={t} lang={lang} />} />
+      <Route path="/services/wireless-communication" element={<WirelessCommunication t={t} lang={lang} />} />
+      <Route path="/services/elv-systems" element={<ELVSystems t={t} lang={lang} />} />
+    </Routes>
+    </>
   );
 }
